@@ -1,6 +1,7 @@
 # Driver-Attentiveness-System
 A Python program that checks driver attentiveness using computer vision.  
-*Work In Progress*
+*Work In Progress*  
+*Project Submission for AICTE Eduskills IBM Internship (Dec 2022 - Jan 2023)*  
 
 ### Prerequisites  
 - Python 3.8.x
