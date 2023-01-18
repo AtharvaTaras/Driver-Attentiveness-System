@@ -10,6 +10,8 @@ A Python program that checks driver attentiveness using computer vision.
 - OS
 - DateTime
 
+___
+
 To create a custom Python virtual environment   
 ```
 python -m venv custom_venv
