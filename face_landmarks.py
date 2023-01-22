@@ -20,9 +20,17 @@ for face in faces:
 
 cv2.imshow("Facial Landmarks", image)
 cv2.waitKey(0)
+
+Landmark Index
+
+Left eye 36-41
+Right eye 42-47
+Upper lips 
+Lower Lips
+
 '''
 
-vid = cv2.VideoCapture(0)
+vid = cv2.VideoCapture(1)
 
 while True:
     ret, frame = vid.read()
@@ -36,9 +44,9 @@ while True:
             landmarks = predictor(gray, face)
 
             for n in range(0, 68):
-                x = (landmarks.part(n).x) * 2
-                y = (landmarks.part(n).y) * 2
-                #cv2.circle(frame, (x, y), 4, (150, 150, 150), 1)
+                x = landmarks.part(n).x * 2
+                y = landmarks.part(n).y * 2
+                # cv2.circle(frame, (x, y), 4, (150, 150, 150), 1)
 
                 cv2.putText(img=frame,
                             text=str(n),
