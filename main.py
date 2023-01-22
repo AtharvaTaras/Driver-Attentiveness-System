@@ -9,7 +9,7 @@ text_log(message='Imported libraries successfully.',
 
 # Global Constants
 
-DEBUG_FACE = True
+DEBUG_FACE = False
 DEBUG_LANDMARKS = True
 CLEAR_OLD_LOGS = False
 DETECTOR = dlib.get_frontal_face_detector()
@@ -27,6 +27,7 @@ text_log(message='Global variables set.')
 def find_face(avearges: list) -> list:
 
     ret, frame = VID.read()
+    drowsy = False
     blinks = 0
     yawns = 0
 
@@ -38,7 +39,8 @@ def find_face(avearges: list) -> list:
             x, y, w, h = (each for each in face_coordinates)
             # return [x, y, x + w, y + h]  # Face Mask
 
-            subframe = grayscale[y: y + h, x: x + w]
+            # subframe = grayscale[y: y + h, x: x + w]
+            subframe = grayscale
 
             faces = DETECTOR(subframe)
             lt = []
@@ -64,9 +66,15 @@ def find_face(avearges: list) -> list:
             cv2.imshow('Main', frame)
             add_text(winname=frame,
                      message=f'Drowsy:{drowsy}')
+            cv2.waitKey(1)
 
         else:
             x, y, w, h = 0, 0, 0, 0
+
+            cv2.imshow('Main', frame)
+            add_text(winname=frame,
+                     message=f'Drowsy:{drowsy}')
+            cv2.waitKey(1)
 
         if DEBUG_FACE:
             cv2.imshow('Raw Input', frame)
@@ -76,7 +84,7 @@ def find_face(avearges: list) -> list:
                           thickness=1,
                           color=(255, 255, 255))
             cv2.imshow('Grayscale', grayscale)
-            cv2.imshow('Extracted Face', subframe)
+            #cv2.imshow('Extracted Face', subframe)
             cv2.waitKey(1)
             # print(face_coordinates)
 
@@ -155,6 +163,7 @@ def calibrate(duration: float) -> list:
 
                 # print(lt_eye, rt_eye)
 
+        cv2.destroyAllWindows()
         # Return average eyelid separation for both eyes
         return [sum(lt_eye)/len(lt_eye), sum(rt_eye)/len(rt_eye)]
 
@@ -191,7 +200,7 @@ def add_text(winname, message, location=(35, 35), colour=(255, 255, 255), thick=
 
 text_log(message='All functions initialized, starting...',
          show_console=True)
-avg_vals = calibrate(15.00)
+avg_vals = calibrate(5.00)
 
 while True:
     find_face(avg_vals)
