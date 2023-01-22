@@ -10,6 +10,7 @@ text_log(message='Imported libraries successfully.',
 # Global Constants
 
 DEBUG_FACE = True
+DEBUG_LANDMARKS = True
 CLEAR_OLD_LOGS = False
 DETECTOR = dlib.get_frontal_face_detector()
 PREDICTOR = dlib.shape_predictor("data/shape_predictor_68_face_landmarks.dat")
@@ -23,9 +24,11 @@ if CLEAR_OLD_LOGS:
 text_log(message='Global variables set.')
 
 
-def find_face() -> list:
+def find_face(avearges: list) -> list:
 
     ret, frame = VID.read()
+    blinks = 0
+    yawns = 0
 
     if ret:
         grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -33,7 +36,34 @@ def find_face() -> list:
 
         if len(face_coordinates) == 4:
             x, y, w, h = (each for each in face_coordinates)
-            return [x, y, x + w, y + h]  # Face Mask
+            # return [x, y, x + w, y + h]  # Face Mask
+
+            subframe = grayscale[y: y + h, x: x + w]
+
+            faces = DETECTOR(subframe)
+            lt = []
+            rt = []
+            points = []
+
+            for face in faces:
+                landmarks = PREDICTOR(subframe, face)
+
+                for n in range(0, 68):
+                    y = landmarks.part(n).y
+                    points.append(y)
+
+                lt = points[36:42]
+                rt = points[42:48]
+
+                if (sum(lt)/len(lt) < avearges[0]) or (sum(rt)/len(rt) < avearges[1]):
+                    drowsy = True
+
+                else:
+                    drowsy = False
+
+            cv2.imshow('Main', frame)
+            add_text(winname=frame,
+                     message=f'Drowsy:{drowsy}')
 
         else:
             x, y, w, h = 0, 0, 0, 0
@@ -46,8 +76,9 @@ def find_face() -> list:
                           thickness=1,
                           color=(255, 255, 255))
             cv2.imshow('Grayscale', grayscale)
+            cv2.imshow('Extracted Face', subframe)
             cv2.waitKey(1)
-            print(face_coordinates)
+            # print(face_coordinates)
 
 
 def check_blink():
@@ -62,7 +93,7 @@ def facial_landmarks():
     pass
 
 
-def calibrate():
+def calibrate(duration: float) -> list:
     ret, frame = VID.read()
 
     if ret:
@@ -73,58 +104,68 @@ def calibrate():
         lt_eye = []
         rt_eye = []
 
-        for face in faces:
-            landmarks = PREDICTOR(grey, face)
+        start = time()
 
-            points = []
+        while (time()-start) < duration:
 
-            for n in range(0, 68):
+            for face in faces:
+                landmarks = PREDICTOR(grey, face)
 
-                x = landmarks.part(n).x
-                y = landmarks.part(n).y
-                # Appending Y coordinates only since we need vertical euclidean distance between eyelids/lips
-                points.append(y)
-                # print(points)
+                points = []
 
-                if (n > 35) and (n < 48) or ((n > 47) and (n < 68)):
+                for n in range(0, 68):
 
-                    cv2.circle(frame,
-                               center=(x, y),
-                               radius=2,
-                               color=(0, 0, 0),
-                               thickness=-1)
+                    x = landmarks.part(n).x
+                    y = landmarks.part(n).y
+                    # Appending Y coordinates only since we need vertical euclidean distance between eyelids/lips
+                    points.append(y)
+                    # print(points)
 
-                    add_text(winname=frame,
-                             location=(x, y),
-                             message=str(n),
-                             colour=(255, 255, 255),
-                             size=0.25
-                             )
+                    if ((n > 35) and (n < 48)) or ((n > 47) and (n < 68)):
 
-            add_text(winname=frame,
-                     message='Calibrating system, please relax your face to a normal position',
-                     thick=2,
-                     size=0.5,
-                     colour=(25, 25, 25)
-                     )
+                        if DEBUG_LANDMARKS:
+                            cv2.circle(frame,
+                                       center=(x, y),
+                                       radius=2,
+                                       color=(0, 0, 0),
+                                       thickness=-1)
 
-            lt_avg = ((points[41] - points[37]) + (points[40] - points[38]))/2
-            rt_avg = ((points[47] - points[43]) + (points[48] - points[44]))/2
+                            add_text(winname=frame,
+                                     location=(x, y),
+                                     message=str(n),
+                                     colour=(255, 255, 255),
+                                     size=0.25
+                                     )
 
-            lt_eye.append(lt_avg)
-            rt_eye.append(rt_avg)
+                add_text(winname=frame,
+                         message='Calibrating system, please relax your face to a normal position',
+                         thick=2,
+                         size=0.5,
+                         colour=(25, 25, 25)
+                         )
 
-            cv2.imshow("Facial Landmarks", frame)
-            cv2.waitKey(1)
+                lt_avg = ((points[41] - points[37]) + (points[40] - points[38]))/2
+                rt_avg = ((points[47] - points[43]) + (points[48] - points[44]))/2
 
-            # print(lt_eye, rt_eye)
-            return [lt_eye, rt_eye]
+                lt_eye.append(lt_avg)
+                rt_eye.append(rt_avg)
+
+                cv2.imshow("Facial Landmarks", frame)
+                cv2.waitKey(1)
+
+                # print(lt_eye, rt_eye)
+
+        # Return average eyelid separation for both eyes
+        return [sum(lt_eye)/len(lt_eye), sum(rt_eye)/len(rt_eye)]
 
 
 def exit_sequence() -> None:
     cv2.destroyAllWindows()
+    del DETECTOR, PREDICTOR, HAAR_DATA, DEBUG_FACE, DEBUG_LANDMARKS, CLEAR_OLD_LOGS
+
     text_log(message='Quit',
              curr_time=datetime.now().strftime("%H:%M:%S"))
+
     quit('Quitting')
 
 
@@ -150,14 +191,8 @@ def add_text(winname, message, location=(35, 35), colour=(255, 255, 255), thick=
 
 text_log(message='All functions initialized, starting...',
          show_console=True)
-
-t1 = time()
-
-while time()-t1 <= 10.0:
-    left, right = calibrate()
-    print(left, right)
+avg_vals = calibrate(15.00)
 
 while True:
-    # find_face()
-    # calibrate()
-    pass
+    find_face(avg_vals)
+
