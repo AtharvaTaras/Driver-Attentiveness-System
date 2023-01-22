@@ -11,7 +11,7 @@ Work In Progress
 - OS
 - DateTime
 - Dlib
-- Face-Detector
+- Face-Recognition
 - Cmake
 ___
 
