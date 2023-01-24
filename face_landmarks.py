@@ -30,7 +30,7 @@ Lower Lips
 
 '''
 
-vid = cv2.VideoCapture(1)
+vid = cv2.VideoCapture(0)
 
 while True:
     ret, frame = vid.read()
@@ -52,7 +52,7 @@ while True:
                             text=str(n),
                             org=(x, y),
                             fontFace=cv2.FONT_HERSHEY_PLAIN,
-                            fontScale=0.65,
+                            fontScale=1,
                             thickness=1,
                             color=(255, 255, 255))
 
