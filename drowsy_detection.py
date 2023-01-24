@@ -2,7 +2,6 @@ import cv2
 import dlib
 from scipy.spatial import distance
 
-
 def calculate_EAR(eye):
     A = distance.euclidean(eye[1], eye[5])
     B = distance.euclidean(eye[2], eye[4])
