@@ -1,21 +1,26 @@
 # Driver-Attentiveness-System
 A Python program that checks driver attentiveness using computer vision.  
-Work In Progress  
-*Project Submission for AICTE Eduskills IBM Internship (Dec 2022 - Jan 2023)*  
+*Work In Progress*  
 
-### Prerequisites  
-- Python 3.8.5
-- Visual C++
-- OpenCV
-- Numpy
-- OS
-- DateTime
-- Dlib
-- Face-Recognition
-- Cmake
-- SciPy
-- Time
+Project Submission for IBM Internship (AICTE, Edunet Foundation Batch Dec 2022 - Feb 2023)  
+Atharva Taras (AI_ADV_21 Dec)  
+AISSMS Institute of Information Technology, Pune  
 
+<pre>
+<h3>Prerequisites</h3>
+> Python 3.8.5
+> Visual C++
+> OpenCV
+> Numpy
+> OS
+> DateTime
+> Dlib
+> Face-Recognition
+> Cmake
+> SciPy
+> Time
+
+</pre>
 ___
 
 To create a custom Python virtual environment   
@@ -35,7 +40,7 @@ You may run into errors while installing dlib, try this to fix it (worked for me
 
 1. Make sure you have the latest version of [Microsoft Visual C++](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170) installed  
 
-2. Clone [this repository](https://github.com/datamagic2020/Install-dlib) to get all the wheel (.wh) files
+2. Clone [this repository](https://github.com/datamagic2020/Install-dlib) to get all the wheel (.whl) files
 ```commandline
 git clone https://github.com/datamagic2020/Install-dlib.git
 ```
