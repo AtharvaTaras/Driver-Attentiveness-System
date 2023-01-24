@@ -13,6 +13,9 @@ Work In Progress
 - Dlib
 - Face-Recognition
 - Cmake
+- SciPy
+- Time
+
 ___
 
 To create a custom Python virtual environment   
@@ -44,3 +47,4 @@ pip install "path_to_cloned_repo\wheel_package_for_your_python_version"
 ```commandline
 python -V
 ```
+---
