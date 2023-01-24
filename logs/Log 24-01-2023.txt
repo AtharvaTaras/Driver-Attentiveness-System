@@ -1,0 +1,66 @@
+10:24:19 - Imported libraries successfully. 
+10:24:46 - Imported libraries successfully. 
+10:24:53 - Global variables set. 
+10:24:53 - All functions initialized, starting... 
+10:25:29 - Imported libraries successfully. 
+10:25:36 - Global variables set. 
+10:25:36 - All functions initialized, starting... 
+10:27:39 - Imported libraries successfully. 
+10:27:46 - Global variables set. 
+10:27:46 - All functions initialized, starting... 
+10:28:41 - Imported libraries successfully. 
+10:28:47 - Global variables set. 
+10:28:47 - All functions initialized, starting... 
+10:30:58 - Imported libraries successfully. 
+10:31:05 - Global variables set. 
+10:31:05 - All functions initialized, starting... 
+10:32:11 - Imported libraries successfully. 
+10:32:18 - Global variables set. 
+10:32:18 - All functions initialized, starting... 
+10:32:53 - Imported libraries successfully. 
+10:33:00 - Global variables set. 
+10:33:00 - All functions initialized, starting... 
+10:33:21 - Imported libraries successfully. 
+10:33:28 - Global variables set. 
+10:33:28 - All functions initialized, starting... 
+10:34:40 - Imported libraries successfully. 
+10:34:47 - Global variables set. 
+10:34:47 - All functions initialized, starting... 
+10:34:58 - Imported libraries successfully. 
+10:35:05 - Global variables set. 
+10:35:05 - All functions initialized, starting... 
+10:36:27 - Imported libraries successfully. 
+10:36:33 - Global variables set. 
+10:36:33 - All functions initialized, starting... 
+10:48:23 - Imported libraries successfully. 
+10:48:28 - Opening camera 
+10:48:30 - Global variables set. 
+10:48:30 - All functions initialized, starting... 
+10:50:24 - Imported libraries successfully. 
+10:50:29 - Opening camera 
+10:50:31 - Global variables set. 
+10:50:31 - All functions initialized, starting... 
+10:51:18 - Imported libraries successfully. 
+10:51:23 - Opening camera 
+10:51:25 - Global variables set. 
+10:51:25 - All functions initialized, starting... 
+10:51:41 - Imported libraries successfully. 
+10:51:46 - Opening camera 
+10:51:48 - Global variables set. 
+10:51:48 - All functions initialized, starting... 
+10:52:49 - Imported libraries successfully. 
+10:52:54 - Opening camera 
+10:52:56 - Global variables set. 
+10:52:56 - All functions initialized, starting... 
+11:07:40 - Imported libraries successfully. 
+11:07:45 - Opening camera 
+11:07:47 - Global variables set. 
+11:07:47 - All functions initialized, starting... 
+11:08:19 - Imported libraries successfully. 
+11:08:24 - Opening camera 
+11:08:26 - Global variables set. 
+11:08:26 - All functions initialized, starting... 
+11:10:30 - Imported libraries successfully. 
+11:10:35 - Opening camera 
+11:10:36 - Global variables set. 
+11:10:36 - All functions initialized, starting... 
