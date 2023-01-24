@@ -2,8 +2,10 @@ import cv2
 import dlib
 from datetime import datetime
 from time import time, sleep
-import numpy as np
+from scipy.spatial import distance
 from logging import *
+import numpy as np
+
 text_log(message='Imported libraries successfully.',
          show_console=True)
 
@@ -16,7 +18,15 @@ DETECTOR = dlib.get_frontal_face_detector()
 PREDICTOR = dlib.shape_predictor("data/shape_predictor_68_face_landmarks.dat")
 HAAR_DATA = cv2.CascadeClassifier('data/frontfacedata.xml')
 FONT = cv2.FONT_HERSHEY_SIMPLEX
-VID = cv2.VideoCapture(1)
+
+try:
+    text_log(message='Opening camera')
+    VID = cv2.VideoCapture(0)
+except KeyboardInterrupt:
+    exit('Quitting')
+except Exception as e:
+    text_log(message='Error while reading camera, quitting')
+    exit('Quitting')
 
 if CLEAR_OLD_LOGS:
     clear_logs()
@@ -24,73 +34,96 @@ if CLEAR_OLD_LOGS:
 text_log(message='Global variables set.')
 
 
-def find_face(avearges: list) -> list:
+def find_face() -> list:
 
     ret, frame = VID.read()
-    drowsy = False
-    blinks = 0
-    yawns = 0
 
     if ret:
         grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         face_coordinates = HAAR_DATA.detectMultiScale(grayscale)
 
-        if len(face_coordinates) == 4:
-            x, y, w, h = (each for each in face_coordinates)
+        if len(face_coordinates) == 1:
+            x, y, w, h = [each for each in face_coordinates[0]]
             # return [x, y, x + w, y + h]  # Face Mask
 
-            # subframe = grayscale[y: y + h, x: x + w]
-            subframe = grayscale
-
-            faces = DETECTOR(subframe)
-            lt = []
-            rt = []
-            points = []
-
-            for face in faces:
-                landmarks = PREDICTOR(subframe, face)
-
-                for n in range(0, 68):
-                    y = landmarks.part(n).y
-                    points.append(y)
-
-                lt = points[36:42]
-                rt = points[42:48]
-
-                if (sum(lt)/len(lt) < avearges[0]) or (sum(rt)/len(rt) < avearges[1]):
-                    drowsy = True
-
-                else:
-                    drowsy = False
-
-            cv2.imshow('Main', frame)
-            add_text(winname=frame,
-                     message=f'Drowsy:{drowsy}')
-            cv2.waitKey(1)
+            subframe = grayscale[y: y + h, x: x + w]
 
         else:
-            x, y, w, h = 0, 0, 0, 0
+            x, y = 0, 0
+            w = grayscale.shape[1]
+            h = grayscale.shape[0]
+            subframe = grayscale
 
-            cv2.imshow('Main', frame)
-            add_text(winname=frame,
-                     message=f'Drowsy:{drowsy}')
-            cv2.waitKey(1)
 
         if DEBUG_FACE:
+            print(len(face_coordinates), face_coordinates)
+            # print(f'X {x} Y {y}, W {w}, H {h}')
             cv2.imshow('Raw Input', frame)
             cv2.rectangle(img=grayscale,
                           pt1=(x, y),
                           pt2=(x+h, y+w),
-                          thickness=1,
+                          thickness=2,
                           color=(255, 255, 255))
             cv2.imshow('Grayscale', grayscale)
-            #cv2.imshow('Extracted Face', subframe)
+            cv2.imshow('Extracted Face', subframe)
             cv2.waitKey(1)
             # print(face_coordinates)
 
+        return [frame, subframe, [x, y, w, h]]
 
-def check_blink():
-    pass
+
+def calculate_EAR(eye):
+    A = distance.euclidean(eye[1], eye[5])
+    B = distance.euclidean(eye[2], eye[4])
+    C = distance.euclidean(eye[0], eye[3])
+    ear_aspect_ratio = (A + B) / (2.0 * C)
+    return ear_aspect_ratio
+
+
+def check_blink(grey_frame) -> bool:
+    blink = False
+    faces = DETECTOR(grey_frame)
+
+    for face in faces:
+
+        face_landmarks = PREDICTOR(grey_frame, face)
+        leftEye = []
+        rightEye = []
+
+        for n in range(36, 42):
+            x = face_landmarks.part(n).x
+            y = face_landmarks.part(n).y
+            leftEye.append((x, y))
+            next_point = n + 1
+            if n == 41:
+                next_point = 36
+            x2 = face_landmarks.part(next_point).x
+            y2 = face_landmarks.part(next_point).y
+            # cv2.line(grey_frame, (x, y), (x2, y2), (0, 255, 0), 1)
+
+        for n in range(42, 48):
+            x = face_landmarks.part(n).x
+            y = face_landmarks.part(n).y
+            rightEye.append((x, y))
+            next_point = n + 1
+            if n == 47:
+                next_point = 42
+            x2 = face_landmarks.part(next_point).x
+            y2 = face_landmarks.part(next_point).y
+            # cv2.line(grey_frame, (x, y), (x2, y2), (0, 0, 0), 3)
+
+        left_ear = calculate_EAR(leftEye)
+        right_ear = calculate_EAR(rightEye)
+
+        EAR = (left_ear + right_ear) / 2
+        EAR = round(EAR, 2)
+
+        if EAR < 0.25:
+            blink = True
+
+        return blink
+
+
 
 
 def check_yawn():
@@ -205,8 +238,57 @@ def add_text(winname, message, location=(35, 35), colour=(255, 255, 255), thick=
 
 text_log(message='All functions initialized, starting...',
          show_console=True)
-avg_vals = calibrate(5.00)
+
+blinks = 0
+new_blinks = 0
+drowsy = False
+init = time()
 
 while True:
-    find_face(avg_vals)
+
+    face_data = find_face()
+
+    if check_blink(face_data[1]) == True:
+        blinks += 1
+        new_blinks += 1
+
+    if time() - init < 5 and new_blinks > 10:
+        drowsy = True
+        new_blinks = 0
+        init = time()
+
+    frame = face_data[0]
+    x, y, w, h = (i for i in face_data[2])
+
+    add_text(winname=frame,
+             message=f'Blinks {blinks}',
+             location=(20, 25),
+             size=0.75,
+             thick=2,
+             colour=(0, 0, 0))
+
+    if drowsy:
+        add_text(winname=frame,
+                 message=f'Drowsy {drowsy}',
+                 location=(20, 50),
+                 size=0.75,
+                 thick=2,
+                 colour=(0, 0, 255))
+
+    else:
+        add_text(winname=frame,
+                 message=f'Drowsy {drowsy}',
+                 location=(20, 50),
+                 size=0.75,
+                 thick=2,
+                 colour=(0, 255, 0))
+
+    cv2.rectangle(img=frame,
+                  pt1=(x, y),
+                  pt2=(x + h, y + w),
+                  thickness=1,
+                  color=(255, 255, 255))
+
+    cv2.imshow('Output', frame)
+    cv2.waitKey(1)
 
