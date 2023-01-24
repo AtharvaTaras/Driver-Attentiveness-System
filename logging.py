@@ -20,12 +20,12 @@ def text_log(message: str, curr_time=False,  show_console=False, filename=False)
             print(f'{message} \n Saved log in {filename} at {curr_time} successfully.')
 
 
-def clear_logs(location=False):
+def clear_logs(extension='.txt', location=False):
 
     if not location:
         os.chdir('logs/')
 
         for file in os.listdir():
-            if file.endswith('.txt'):
+            if file.endswith(extension):
                 os.remove(file)
                 print(f'Deleted file {file}')
