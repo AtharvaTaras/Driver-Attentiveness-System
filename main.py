@@ -114,7 +114,7 @@ def calibrate(duration: float) -> list:
 
         start = time()
 
-        while (time()-start) < duration:
+        while True:
 
             for face in faces:
                 landmarks = PREDICTOR(grey, face)
@@ -160,6 +160,11 @@ def calibrate(duration: float) -> list:
 
                 cv2.imshow("Facial Landmarks", frame)
                 cv2.waitKey(1)
+
+                if time()-start <= duration:
+                    break
+
+                break
 
                 # print(lt_eye, rt_eye)
 
