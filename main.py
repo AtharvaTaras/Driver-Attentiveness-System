@@ -13,7 +13,9 @@ text_log(message='Imported libraries successfully.',
 
 DEBUG_FACE = False
 DEBUG_LANDMARKS = True
+DEBUG_BLINK = True
 CLEAR_OLD_LOGS = False
+
 DETECTOR = dlib.get_frontal_face_detector()
 PREDICTOR = dlib.shape_predictor("data/shape_predictor_68_face_landmarks.dat")
 HAAR_DATA = cv2.CascadeClassifier('data/frontfacedata.xml')
@@ -72,7 +74,7 @@ def find_face() -> list:
         return [frame, subframe, [x, y, w, h]]
 
 
-def calculate_EAR(eye):
+def calculate_EAR(eye) -> float:
     A = distance.euclidean(eye[1], eye[5])
     B = distance.euclidean(eye[2], eye[4])
     C = distance.euclidean(eye[0], eye[3])
@@ -99,7 +101,9 @@ def check_blink(grey_frame) -> bool:
                 next_point = 36
             x2 = face_landmarks.part(next_point).x
             y2 = face_landmarks.part(next_point).y
-            # cv2.line(grey_frame, (x, y), (x2, y2), (0, 255, 0), 1)
+
+            if DEBUG_BLINK:
+                cv2.line(grey_frame, (x, y), (x2, y2), (150, 150, 0), 2)
 
         for n in range(42, 48):
             x = face_landmarks.part(n).x
@@ -110,7 +114,13 @@ def check_blink(grey_frame) -> bool:
                 next_point = 42
             x2 = face_landmarks.part(next_point).x
             y2 = face_landmarks.part(next_point).y
-            # cv2.line(grey_frame, (x, y), (x2, y2), (0, 0, 0), 3)
+
+            if DEBUG_BLINK:
+                cv2.line(grey_frame, (x, y), (x2, y2), (150, 150, 0), 2)
+
+        if DEBUG_BLINK:
+            cv2.imshow('Eyes', grey_frame)
+            cv2.waitKey(1)
 
         left_ear = calculate_EAR(leftEye)
         right_ear = calculate_EAR(rightEye)
@@ -118,12 +128,11 @@ def check_blink(grey_frame) -> bool:
         EAR = (left_ear + right_ear) / 2
         EAR = round(EAR, 2)
 
-        if EAR < 0.25:
+        if EAR < 0.18:
             blink = True
+            sleep(0.05)
 
         return blink
-
-
 
 
 def check_yawn():
@@ -208,7 +217,7 @@ def calibrate(duration: float) -> list:
 
 def exit_sequence() -> None:
     cv2.destroyAllWindows()
-    del DETECTOR, PREDICTOR, HAAR_DATA, DEBUG_FACE, DEBUG_LANDMARKS, CLEAR_OLD_LOGS
+    del DETECTOR, PREDICTOR, HAAR_DATA, DEBUG_FACE, DEBUG_LANDMARKS, DEBUG_BLINK, CLEAR_OLD_LOGS
 
     text_log(message='Quit',
              curr_time=datetime.now().strftime("%H:%M:%S"))
@@ -216,7 +225,7 @@ def exit_sequence() -> None:
     quit('Quitting')
 
 
-def add_text(winname, message, location=(35, 35), colour=(255, 255, 255), thick=1, size=1.0):
+def add_text(winname, message, location=(35, 35), colour=(255, 255, 255), thick=1, size=1.0) -> None:
 
     try:
         cv2.putText(img=winname,
@@ -257,6 +266,9 @@ while True:
         new_blinks = 0
         init = time()
 
+    if time() - init >= 5:
+        init = time()
+
     frame = face_data[0]
     x, y, w, h = (i for i in face_data[2])
 
@@ -273,7 +285,7 @@ while True:
                  location=(20, 50),
                  size=0.75,
                  thick=2,
-                 colour=(0, 0, 255))
+                 colour=(0, 0, 200))
 
     else:
         add_text(winname=frame,
@@ -286,7 +298,7 @@ while True:
     cv2.rectangle(img=frame,
                   pt1=(x, y),
                   pt2=(x + h, y + w),
-                  thickness=1,
+                  thickness=2,
                   color=(255, 255, 255))
 
     cv2.imshow('Output', frame)
