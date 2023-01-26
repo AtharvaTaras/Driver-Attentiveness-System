@@ -53,5 +53,19 @@ pip install "path_to_cloned_repo\wheel_package_for_your_python_version"
 python -V
 ```
 ---
-Face Detection  
-https://github.com/AtharvaTaras/Driver-Attentiveness-System/blob/master/outputs/face_detect.mp4
+Sample Outputs -    
+
+https://user-images.githubusercontent.com/78966432/214768519-b1be7019-18cf-44cd-b635-0d4d334e1a4b.mp4
+
+https://user-images.githubusercontent.com/78966432/214768609-7b2e8e61-93a0-4d0e-b992-7c650d63fd68.mp4
+
+https://user-images.githubusercontent.com/78966432/214768627-a8e3c380-e65d-4664-8021-e13a23b69900.mp4
+
+https://user-images.githubusercontent.com/78966432/214768661-8b7b809a-f372-4ad4-8fae-d1728618fe14.mp4
+
+
+
+
+
+
+
