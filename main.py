@@ -139,10 +139,6 @@ def check_yawn():
     pass
 
 
-def facial_landmarks():
-    pass
-
-
 def calibrate(duration: float) -> list:
     ret, frame = VID.read()
 
