@@ -207,6 +207,7 @@ def calibrate(duration: float) -> list:
                 # print(lt_eye, rt_eye)
 
         cv2.destroyAllWindows()
+
         # Return average eyelid separation for both eyes
         return [sum(lt_eye)/len(lt_eye), sum(rt_eye)/len(rt_eye)]
 
