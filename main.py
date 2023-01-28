@@ -24,10 +24,14 @@ FONT = cv2.FONT_HERSHEY_SIMPLEX
 try:
     text_log(message='Opening camera')
     VID = cv2.VideoCapture(0)
+
 except KeyboardInterrupt:
     exit('Quitting')
+
 except Exception as e:
-    text_log(message='Error while reading camera, quitting')
+
+    text_log(message='Error while reading camera, quitting',
+             show_console=True)
     exit('Quitting')
 
 if CLEAR_OLD_LOGS:
@@ -38,101 +42,145 @@ text_log(message='Global variables set.')
 
 def find_face() -> list:
 
-    ret, frame = VID.read()
+    try:
+        ret, frame = VID.read()
 
-    if ret:
-        grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        face_coordinates = HAAR_DATA.detectMultiScale(grayscale)
+        if ret:
+            grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            face_coordinates = HAAR_DATA.detectMultiScale(grayscale)
 
-        if len(face_coordinates) == 1:
-            x, y, w, h = [each for each in face_coordinates[0]]
-            # return [x, y, x + w, y + h]  # Face Mask
+            if len(face_coordinates) == 1:
+                x, y, w, h = [each for each in face_coordinates[0]]
+                # return [x, y, x + w, y + h]  # Face Mask
 
-            subframe = grayscale[y: y + h, x: x + w]
+                subframe = grayscale[y: y + h, x: x + w]
 
-        else:
-            x, y = 0, 0
-            w = grayscale.shape[1]
-            h = grayscale.shape[0]
-            subframe = grayscale
+            else:
+                x, y = 0, 0
+                w = grayscale.shape[1]
+                h = grayscale.shape[0]
+                subframe = grayscale
 
 
-        if DEBUG_FACE:
-            print(len(face_coordinates), face_coordinates)
-            # print(f'X {x} Y {y}, W {w}, H {h}')
-            cv2.imshow('Raw Input', frame)
-            cv2.rectangle(img=grayscale,
-                          pt1=(x, y),
-                          pt2=(x+h, y+w),
-                          thickness=2,
-                          color=(255, 255, 255))
-            cv2.imshow('Grayscale', grayscale)
-            cv2.imshow('Extracted Face', subframe)
-            cv2.waitKey(1)
-            # print(face_coordinates)
+            if DEBUG_FACE:
 
-        return [frame, subframe, [x, y, w, h]]
+                try:
+                    print(len(face_coordinates), face_coordinates)
+                    # print(f'X {x} Y {y}, W {w}, H {h}')
+                    cv2.imshow('Raw Input', frame)
+                    cv2.rectangle(img=grayscale,
+                                  pt1=(x, y),
+                                  pt2=(x+h, y+w),
+                                  thickness=2,
+                                  color=(255, 255, 255))
+                    cv2.imshow('Grayscale', grayscale)
+                    cv2.imshow('Extracted Face', subframe)
+                    cv2.waitKey(1)
+                    # print(face_coordinates)
+
+                except KeyboardInterrupt:
+                    exit_sequence()
+
+                except Exception as e:
+                    text_log(message=f'Failed to debug face - {e}',
+                             show_console=True)
+
+            return [frame, subframe, [x, y, w, h]]
+
+    except KeyboardInterrupt:
+        exit_sequence()
+
+    except Exception as e:
+        text_log(message=f'Could not find video - {e}',
+                 show_console=True)
+
 
 
 def calculate_EAR(eye) -> float:
-    A = distance.euclidean(eye[1], eye[5])
-    B = distance.euclidean(eye[2], eye[4])
-    C = distance.euclidean(eye[0], eye[3])
-    ear_aspect_ratio = (A + B) / (2.0 * C)
-    return ear_aspect_ratio
+
+    try:
+        A = distance.euclidean(eye[1], eye[5])
+        B = distance.euclidean(eye[2], eye[4])
+        C = distance.euclidean(eye[0], eye[3])
+        ear_aspect_ratio = (A + B) / (2.0 * C)
+        return ear_aspect_ratio
+
+    except KeyboardInterrupt:
+        exit_sequence()
+
+    except Exception as e:
+        text_log(message=f'Failed to calculate EAR {e}')
 
 
 def check_blink(grey_frame) -> bool:
-    blink = False
-    faces = DETECTOR(grey_frame)
 
-    for face in faces:
+    try:
+        blink = False
+        faces = DETECTOR(grey_frame)
 
-        face_landmarks = PREDICTOR(grey_frame, face)
-        leftEye = []
-        rightEye = []
+        for face in faces:
 
-        for n in range(36, 42):
-            x = face_landmarks.part(n).x
-            y = face_landmarks.part(n).y
-            leftEye.append((x, y))
-            next_point = n + 1
-            if n == 41:
-                next_point = 36
-            x2 = face_landmarks.part(next_point).x
-            y2 = face_landmarks.part(next_point).y
+            face_landmarks = PREDICTOR(grey_frame, face)
+            leftEye = []
+            rightEye = []
 
-            if DEBUG_BLINK:
-                cv2.line(grey_frame, (x, y), (x2, y2), (150, 150, 0), 2)
+            for n in range(36, 42):
+                x = face_landmarks.part(n).x
+                y = face_landmarks.part(n).y
+                leftEye.append((x, y))
+                next_point = n + 1
+                if n == 41:
+                    next_point = 36
+                x2 = face_landmarks.part(next_point).x
+                y2 = face_landmarks.part(next_point).y
 
-        for n in range(42, 48):
-            x = face_landmarks.part(n).x
-            y = face_landmarks.part(n).y
-            rightEye.append((x, y))
-            next_point = n + 1
-            if n == 47:
-                next_point = 42
-            x2 = face_landmarks.part(next_point).x
-            y2 = face_landmarks.part(next_point).y
+                if DEBUG_BLINK:
+                    cv2.line(grey_frame, (x, y), (x2, y2), (150, 150, 0), 2)
 
-            if DEBUG_BLINK:
-                cv2.line(grey_frame, (x, y), (x2, y2), (150, 150, 0), 2)
+            for n in range(42, 48):
+                x = face_landmarks.part(n).x
+                y = face_landmarks.part(n).y
+                rightEye.append((x, y))
+                next_point = n + 1
+                if n == 47:
+                    next_point = 42
+                x2 = face_landmarks.part(next_point).x
+                y2 = face_landmarks.part(next_point).y
 
-        if DEBUG_BLINK:
-            cv2.imshow('Eyes', grey_frame)
-            cv2.waitKey(1)
+                if DEBUG_BLINK:
+                    cv2.line(grey_frame, (x, y), (x2, y2), (150, 150, 0), 2)
 
-        left_ear = calculate_EAR(leftEye)
-        right_ear = calculate_EAR(rightEye)
+            try:
+                if DEBUG_BLINK:
+                    cv2.imshow('Eyes', grey_frame)
+                    cv2.waitKey(1)
 
-        EAR = (left_ear + right_ear) / 2
-        EAR = round(EAR, 2)
+                left_ear = calculate_EAR(leftEye)
+                right_ear = calculate_EAR(rightEye)
 
-        if EAR < 0.18:
-            blink = True
-            sleep(0.05)
+                EAR = (left_ear + right_ear) / 2
+                EAR = round(EAR, 2)
 
-        return blink
+                if EAR < 0.18:
+                    blink = True
+                    text_log(message='Blink Detected')
+                    sleep(0.05)
+
+            except KeyboardInterrupt:
+                exit_sequence()
+
+            except Exception as e:
+                text_log(message=f'Failed to debug blink {e}',
+                         show_console=True)
+
+            return blink
+
+    except KeyboardInterrupt:
+        exit_sequence()
+
+    except Exception as e:
+        text_log(message=f'Failed to check blinks {e}',
+                 show_console=True)
 
 
 def check_yawn():
@@ -277,6 +325,8 @@ while True:
              colour=(0, 0, 0))
 
     if drowsy:
+
+        text_log(message='Drowsy')
         add_text(winname=frame,
                  message=f'Drowsy {drowsy}',
                  location=(20, 50),
@@ -285,6 +335,7 @@ while True:
                  colour=(0, 0, 200))
 
     else:
+
         add_text(winname=frame,
                  message=f'Drowsy {drowsy}',
                  location=(20, 50),
@@ -300,4 +351,3 @@ while True:
 
     cv2.imshow('Output', frame)
     cv2.waitKey(1)
-
