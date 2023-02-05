@@ -35,7 +35,7 @@ while True:
                 next_point = 36
             x2 = face_landmarks.part(next_point).x
             y2 = face_landmarks.part(next_point).y
-            cv2.line(frame, (x, y), (x2, y2), (0, 255, 0), 1)
+            cv2.line(frame, (x, y), (x2, y2), (0, 255, 0), 2)
 
         for n in range(42, 48):
             x = face_landmarks.part(n).x
@@ -46,7 +46,7 @@ while True:
                 next_point = 42
             x2 = face_landmarks.part(next_point).x
             y2 = face_landmarks.part(next_point).y
-            cv2.line(frame, (x, y), (x2, y2), (0, 0, 0), 3)
+            cv2.line(frame, (x, y), (x2, y2), (0, 255, 0), 2)
 
         left_ear = calculate_EAR(leftEye)
         right_ear = calculate_EAR(rightEye)
@@ -54,7 +54,7 @@ while True:
         EAR = (left_ear + right_ear) / 2
         EAR = round(EAR, 2)
 
-        if EAR < 0.26:
+        if EAR < 0.18:
             cv2.putText(
                 frame, "DROWSY", (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 0, 255), 4
             )
