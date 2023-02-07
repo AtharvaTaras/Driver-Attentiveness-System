@@ -1,10 +1,18 @@
 import dlib
 import cv2
-from imutils import face_utils
+import socket
 import numpy as np
+from imutils import face_utils
 from scipy.spatial import distance as dist
-from time import time
-from logging import *
+from time import time, sleep
+from pushbullet import Pushbullet
+from custom_logging import text_log
+from datetime import date, datetime
+
+with open('.gitignore/apikey.txt', 'r') as f:
+    API = str(f.read())
+
+PB = Pushbullet(API)
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -33,14 +41,53 @@ DEBUG_EAR = True
 DEBUG_EYES = True
 DEBUG_LIPS = True
 
+# FLEET MANAGEMENT
+DRIVER_ID = 'ATHTRS21'
+VEHICLE_ID = 'MH12-AT-XXXX (Bolero-Pickup-4X4-White)'
+ROUTE_ID = 'NH42-NH48'
+
+
+def text_log(message: str, curr_time=False,  show_console=False, filename=False):
+
+    if not filename:
+        filename = ('logs/Log ' + (date.today().strftime("%d/%m/%Y").replace('/', '-')) + '.txt')
+
+    if not curr_time:
+        curr_time = datetime.now().strftime("%H:%M:%S")
+
+    with open(filename, 'a') as f:
+        f.write(f'{curr_time} - {message} \n')
+
+        if show_console:
+            print(f'{message} \n Saved log in {filename} at {curr_time} successfully.')
+
+
+def is_connected():
+    try:
+        socket.create_connection(("www.google.com", 80))
+        text_log(message='Internet connected')
+        return True
+
+    except Exception as e:
+        text_log(message='No internet connection available')
+        return False
+
+
+def notify(heading, message) -> None:
+
+    try:
+        push = PB.push_note(title=heading, body=message)
+        text_log(message=f'Sent notification {heading} -> {message}')
+
+    except Exception as e:
+        text_log(message=f'Failed to send notfication {e}')
+
 
 def exit_sequence() -> None:
     cv2.destroyAllWindows()
     # del DETECTOR, PREDICTOR, HAAR_DATA, DEBUG_FACE, DEBUG_LANDMARKS, DEBUG_BLINK, CLEAR_OLD_LOGS
 
-    text_log(message='Quit',
-             curr_time=datetime.now().strftime("%H:%M:%S"))
-
+    text_log(message='Quit')
     quit('Quitting')
 
 
@@ -74,7 +121,7 @@ def find_face() -> list:
         return [frame_, subframe, [x, y, x+w, y+h]]
 
 
-def add_text(winname, message, location=(35, 35), colour=(255, 255, 255), thick=1, size=1.0) -> None:
+def add_text(winname, message, location=(35, 35), colour=(255, 255, 255), thick=2, size=1.0) -> None:
     try:
         cv2.putText(img=winname,
                     text=message,
@@ -166,7 +213,6 @@ def blink_yawn(sub_frame) -> list:
             add_text(winname=sub_frame,
                      message=f'EAR {round(ear, 2)}',
                      colour=WHITE,
-                     thick=2,
                      size=0.75)
 
         if ear < BLINK_THRESH:
@@ -194,6 +240,11 @@ def blink_yawn(sub_frame) -> list:
     return [blinked, yawned, lt_hull, rt_hull, lip]
 
 
+print("Internet is connected" if is_connected() else "Internet is not connected, push notifications may not work")
+
+notify(heading=f'Driver - {DRIVER_ID}',
+       message=f'Starting journey in {VEHICLE_ID} via route {ROUTE_ID}')
+
 blink_ctr = 0
 yawn_ctr = 0
 temp_blink = 0
@@ -215,6 +266,7 @@ while True:
     if blink:
         blink_ctr += 1
         temp_blink += 1
+        sleep(0.05)
 
     if yawn:
         temp_yawn += 1
@@ -241,23 +293,35 @@ while True:
     if adder % ((60/delta) * 10) == 0 and score <= 95:
         score += 5
 
-    cv2.rectangle(img=frame,
-                  pt1=(box[0], box[1]),
-                  pt2=(box[2], box[3]),
-                  color=WHITE,
-                  thickness=2)
+    if DEBUG_FACE:
+        cv2.rectangle(img=frame,
+                      pt1=(box[0], box[1]),
+                      pt2=(box[2], box[3]),
+                      color=WHITE)
 
     add_text(winname=frame,
-             message=f'Blinks {blink_ctr} Yawns {yawn_ctr} Score {score}',
+             message=f'Blinks {blink_ctr}',
              colour=WHITE,
              size=0.5,
-             thick=2)
+             location=(35, 35))
 
     add_text(winname=frame,
-             message=f'Time {time()}, Adder {adder}, Temp Blink/Yawn {temp_blink, temp_yawn}',
-             location=(35, 70),
+             message=f'Yawns {yawn_ctr} Score {score}',
+             colour=WHITE,
              size=0.5,
-             thick=2)
+             location=(35, 70))
+
+    add_text(winname=frame,
+             message=f'Score {score}',
+             colour=GREEN if score >= SCORE_THRESH else RED,
+             size=0.5,
+             location=(35, 105))
+
+    if DEBUG_LIPS and DEBUG_EYES:
+        add_text(winname=frame,
+                 message=f'Time {time()}, Adder {adder}, Temp Blink/Yawn {temp_blink, temp_yawn}',
+                 size=0.5,
+                 location=(35, 140))
 
     cv2.imshow('Frame', frame)
     cv2.waitKey(1)
