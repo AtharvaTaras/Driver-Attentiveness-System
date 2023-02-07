@@ -95,7 +95,6 @@ def find_face() -> list:
                  show_console=True)
 
 
-
 def calculate_EAR(eye) -> float:
 
     try:
