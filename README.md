@@ -20,6 +20,9 @@ AISSMS Institute of Information Technology, Pune
 > Cmake
 > SciPy
 > Time
+> Imutils
+> Winsound
+> Pushbullet
 
 </pre>
 ___
