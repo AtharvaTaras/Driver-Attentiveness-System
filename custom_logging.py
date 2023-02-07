@@ -17,7 +17,7 @@ def text_log(message: str, curr_time=False,  show_console=False, filename=False)
         f.write(f'{curr_time} - {message} \n')
 
         if show_console:
-            print(f'{message} \n Saved log in {filename} at {curr_time} successfully.')
+            print(f'{message} \n Saved log in {filename} at {curr_time} successfully.\n')
 
 
 def clear_logs(extension='.txt', location=False):
