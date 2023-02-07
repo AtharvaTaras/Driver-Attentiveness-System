@@ -33,3 +33,11 @@
 18:50:31 - Initialized local cars, starting... 
 18:51:23 - Driver yawning -> Attentiveness 90% 
 18:52:02 - Driver yawning -> Attentiveness 80% 
+19:13:15 - Imported libraries 
+19:13:28 - Fleet Details: Driver ATHTRS20 Vehicle MH12-AT-XXXX (Bolero-Pickup-4X4-White) Route NH42-NH48 
+19:13:28 - Initialized variables 
+19:13:28 - Defined functions 
+19:13:28 - Internet connected 
+19:13:28 - Sent notification Driver - ATHTRS20 -> Starting journey in MH12-AT-XXXX (Bolero-Pickup-4X4-White) via route NH42-NH48 
+19:13:28 - Initialized local cars, starting... 
+19:13:49 - Driver yawning -> Attentiveness 90% 

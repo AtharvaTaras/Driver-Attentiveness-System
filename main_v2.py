@@ -16,7 +16,7 @@ text_log(message='Imported libraries',
 # GLOBAL VARIABLES ----------------------------
 
 try:
-    with open('.gitignore/apikey.txt', 'r') as f:
+    with open('.git/apikey.txt', 'r') as f:
         API = str(f.read())
 
     PB = Pushbullet(API)
@@ -41,7 +41,7 @@ VID = cv2.VideoCapture(0)
 # VID.set(cv2.CAP_PROP_EXPOSURE, 0.5)
 
 YAWN_THRESH = 35
-BLINK_THRESH = 0.15
+BLINK_THRESH = 0.145
 SCORE_THRESH = 70
 PAD = 50
 
