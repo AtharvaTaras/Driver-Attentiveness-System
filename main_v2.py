@@ -11,20 +11,25 @@ BLACK = (0, 0, 0)
 RED = (0, 0, 150)
 GREEN = (0, 150, 0)
 
-detector = cv2.CascadeClassifier(r'data/frontfacedata.xml')
-predictor = dlib.shape_predictor(r'data/shape_predictor_68_face_landmarks.dat')
-
 VID = cv2.VideoCapture(0)
+# VID.set(cv2.CAP_PROP_SETTINGS, 0)
+# VID.set(cv2.CAP_PROP_BRIGHTNESS, 0.5)
+# VID.set(cv2.CAP_PROP_CONTRAST, 0.5)
+# VID.set(cv2.CAP_PROP_EXPOSURE, 0.5)
+
 YAWN_THRESH = 35
 BLINK_THRESH = 0.16
 
+DETECTOR = dlib.get_frontal_face_detector()
 PREDICTOR = dlib.shape_predictor("data/shape_predictor_68_face_landmarks.dat")
 HAAR_DATA = cv2.CascadeClassifier('data/frontfacedata.xml')
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 
+# Debugging
 DEBUG_FACE = True
 DEBUG_EAR = True
 DEBUG_EYES = False
+DEBUG_LIPS = False
 
 
 def exit_sequence() -> None:
@@ -43,7 +48,11 @@ def find_face() -> list:
 
     if ret:
         grayscale = cv2.cvtColor(frame_, cv2.COLOR_BGR2GRAY)
-        face_coordinates = HAAR_DATA.detectMultiScale(grayscale)
+        face_coordinates = HAAR_DATA.detectMultiScale(image=grayscale,
+                                                      scaleFactor=2,
+                                                      minNeighbors=5,
+                                                      minSize=(50, 50)
+                                                      )
 
         if len(face_coordinates) == 1:
             x, y, w, h = [each for each in face_coordinates[0]]
@@ -129,17 +138,16 @@ def blink_yawn(sub_frame) -> list:
     lip = None
     lt_hull, rt_hull = None, None
 
-    points = HAAR_DATA.detectMultiScale(image=sub_frame,
-                                        scaleFactor=1.1,
-                                        minNeighbors=3,
-                                        minSize=(30, 30),
-                                        flags=cv2.CASCADE_SCALE_IMAGE)
+    points = HAAR_DATA.detectMultiScale(image=frame,
+                                        scaleFactor=2,
+                                        minNeighbors=5,
+                                        minSize=(50, 50)
+                                        )
 
     for (x, y, w, h) in points:
 
         rectangle = dlib.rectangle(int(x), int(y), int(x + w), int(y + h))
-
-        shape = predictor(sub_frame, rectangle)
+        shape = PREDICTOR(sub_frame, rectangle)
         shape = face_utils.shape_to_np(shape)
 
         # EYES -----------------------------------------------------------
@@ -182,7 +190,11 @@ def blink_yawn(sub_frame) -> list:
 
 blink_ctr = 0
 yawn_ctr = 0
+temp_blink = 0
+temp_yawn = 0
+delta = 3
 score = 100
+adder = 0
 
 init = time()
 
@@ -196,15 +208,46 @@ while True:
 
     if blink:
         blink_ctr += 1
+        temp_blink += 1
 
     if yawn:
         yawn_ctr += 1
+        temp_yawn += 1
+
+    # EYES CLOSED ----------------------------------
+    if (time() - init <= delta) and temp_yawn >= 20:
+        score -= 5
+        temp_yawn = 0
+
+    # YAWNING ---------------------------------------
+    if (time() - init <= delta) and temp_blink >= 15:
+        score -= 10
+        temp_blink = 0
+
+    if time() - init >= delta:
+        init = time()
+        adder += 1
+
+    if adder % ((60/delta) * 10) == 0 and score <= 95:
+        score += 5
 
     cv2.rectangle(img=frame,
                   pt1=(box[0], box[1]),
                   pt2=(box[2], box[3]),
                   color=WHITE,
                   thickness=2)
+
+    add_text(winname=frame,
+             message=f'Blinks {blink_ctr} Yawns {yawn_ctr} Score {score}',
+             colour=WHITE,
+             size=0.5,
+             thick=2)
+
+    add_text(winname=frame,
+             message=f'Time {time}, Adder {adder}, Temp Blink/Yawn {temp_blink, temp_yawn}',
+             location=(35, 70),
+             size=0.5,
+             thick=2)
 
     cv2.imshow('Frame', frame)
     cv2.waitKey(1)
