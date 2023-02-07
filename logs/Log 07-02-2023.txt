@@ -1,0 +1,35 @@
+17:52:48 - Internet connected 
+17:52:49 - Sent notification Driver - ATHTRS20 -> Starting journey in MH12-AT-XXXX (Bolero-Pickup-4X4-White) via route NH42-NH48 
+17:53:24 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 65% 
+17:53:30 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 55% 
+17:53:55 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 45% 
+17:54:09 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 40% 
+17:54:26 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 30% 
+17:55:11 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 20% 
+18:16:01 - Internet connected 
+18:16:01 - Sent notification Driver - ATHTRS20 -> Starting journey in MH12-AT-XXXX (Bolero-Pickup-4X4-White) via route NH42-NH48 
+18:18:00 - Internet connected 
+18:18:01 - Sent notification Driver - ATHTRS20 -> Starting journey in MH12-AT-XXXX (Bolero-Pickup-4X4-White) via route NH42-NH48 
+18:20:11 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 65% 
+18:20:27 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 55% 
+18:20:51 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 45% 
+18:21:09 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 40% 
+18:21:26 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 30% 
+18:21:53 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 25% 
+18:22:40 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 15% 
+18:22:48 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 5% 
+18:22:52 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 0% 
+18:23:02 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 0% 
+18:23:34 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 0% 
+18:23:41 - Sent notification Driver ATHTRS20 -> Attentiveness dropped to 0% 
+18:26:37 - Internet connected 
+18:26:38 - Sent notification Driver - ATHTRS20 -> Starting journey in MH12-AT-XXXX (Bolero-Pickup-4X4-White) via route NH42-NH48 
+18:50:17 - Imported libraries 
+18:50:30 - Fleet Details: Driver ATHTRS20 Vehicle MH12-AT-XXXX (Bolero-Pickup-4X4-White) Route NH42-NH48 
+18:50:30 - Initialized variables 
+18:50:30 - Defined functions 
+18:50:30 - Internet connected 
+18:50:31 - Sent notification Driver - ATHTRS20 -> Starting journey in MH12-AT-XXXX (Bolero-Pickup-4X4-White) via route NH42-NH48 
+18:50:31 - Initialized local cars, starting... 
+18:51:23 - Driver yawning -> Attentiveness 90% 
+18:52:02 - Driver yawning -> Attentiveness 80% 

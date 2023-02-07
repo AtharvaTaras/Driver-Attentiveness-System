@@ -2,17 +2,32 @@ import dlib
 import cv2
 import socket
 import numpy as np
+import winsound
 from imutils import face_utils
 from scipy.spatial import distance as dist
 from time import time, sleep
 from pushbullet import Pushbullet
 from custom_logging import text_log
-from datetime import date, datetime
+from datetime import datetime
 
-with open('.gitignore/apikey.txt', 'r') as f:
-    API = str(f.read())
+text_log(message='Imported libraries',
+         show_console=True)
 
-PB = Pushbullet(API)
+# GLOBAL VARIABLES ----------------------------
+
+try:
+    with open('.gitignore/apikey.txt', 'r') as f:
+        API = str(f.read())
+
+    PB = Pushbullet(API)
+
+except FileNotFoundError:
+    text_log(message='API key not found',
+             show_console=True)
+
+except Exception as e:
+    text_log(message=f'Error while connecting to API -> {e}',
+             show_console=True)
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -42,34 +57,24 @@ DEBUG_EYES = True
 DEBUG_LIPS = True
 
 # FLEET MANAGEMENT
-DRIVER_ID = 'ATHTRS21'
+DRIVER_ID = 'ATHTRS20'
 VEHICLE_ID = 'MH12-AT-XXXX (Bolero-Pickup-4X4-White)'
 ROUTE_ID = 'NH42-NH48'
 
+text_log(message=f'Fleet Details: Driver {DRIVER_ID} Vehicle {VEHICLE_ID} Route {ROUTE_ID}')
 
-def text_log(message: str, curr_time=False,  show_console=False, filename=False):
-
-    if not filename:
-        filename = ('logs/Log ' + (date.today().strftime("%d/%m/%Y").replace('/', '-')) + '.txt')
-
-    if not curr_time:
-        curr_time = datetime.now().strftime("%H:%M:%S")
-
-    with open(filename, 'a') as f:
-        f.write(f'{curr_time} - {message} \n')
-
-        if show_console:
-            print(f'{message} \n Saved log in {filename} at {curr_time} successfully.')
+text_log(message='Initialized variables',
+         show_console=True)
 
 
-def is_connected():
+def is_connected() -> bool:
     try:
         socket.create_connection(("www.google.com", 80))
         text_log(message='Internet connected')
         return True
 
-    except Exception as e:
-        text_log(message='No internet connection available')
+    except Exception as ee:
+        text_log(message=f'No internet connection available -> {ee}')
         return False
 
 
@@ -79,14 +84,19 @@ def notify(heading, message) -> None:
         push = PB.push_note(title=heading, body=message)
         text_log(message=f'Sent notification {heading} -> {message}')
 
-    except Exception as e:
-        text_log(message=f'Failed to send notfication {e}')
+    except Exception as ee:
+        text_log(message=f'Failed to send notfication {ee}')
 
 
 def exit_sequence() -> None:
-    cv2.destroyAllWindows()
-    # del DETECTOR, PREDICTOR, HAAR_DATA, DEBUG_FACE, DEBUG_LANDMARKS, DEBUG_BLINK, CLEAR_OLD_LOGS
 
+    notify(heading=f'Driver {DRIVER_ID}',
+           message='Quitting/Pausing Duty')
+
+    cv2.destroyAllWindows()
+    del DETECTOR, PREDICTOR, HAAR_DATA, DEBUG_FACE, DEBUG_LIPS, DEBUG_EYES, FONT
+    del PAD, SCORE_THRESH, BLINK_THRESH, YAWN_THRESH
+    del API, PB, WHITE, BLACK, GREEN, RED
     text_log(message='Quit')
     quit('Quitting')
 
@@ -117,6 +127,7 @@ def find_face() -> list:
 
         if DEBUG_FACE:
             cv2.imshow('Subframe', subframe)
+            cv2.waitKey(1)
 
         return [frame_, subframe, [x, y, x+w, y+h]]
 
@@ -168,6 +179,7 @@ def final_ear(shape) -> list:
 
 
 def lip_distance(shape) -> float:
+
     top_lip = shape[50:53]
     top_lip = np.concatenate((top_lip, shape[61:64]))
 
@@ -236,10 +248,13 @@ def blink_yawn(sub_frame) -> list:
             yawned = True
 
         cv2.imshow('Eyes and Lips Debug', sub_frame)
+        cv2.waitKey(1)
 
     return [blinked, yawned, lt_hull, rt_hull, lip]
 
 
+text_log(message='Defined functions',
+         show_console=True)
 print("Internet is connected" if is_connected() else "Internet is not connected, push notifications may not work")
 
 notify(heading=f'Driver - {DRIVER_ID}',
@@ -255,6 +270,8 @@ adder = 0
 
 init = time()
 
+text_log(message='Initialized local cars, starting...')
+
 while True:
 
     # face_data = find_face()
@@ -266,18 +283,25 @@ while True:
     if blink:
         blink_ctr += 1
         temp_blink += 1
-        sleep(0.05)
+        sleep(0.1)
 
     if yawn:
         temp_yawn += 1
 
     # EYES CLOSED ----------------------------------
-    if (time() - init <= delta) and temp_yawn >= 20:
+    if (time() - init <= delta) and temp_yawn >= 25:
         if score >= 5:
             score -= 5
-        yawn_ctr += 1
 
+        yawn_ctr += 1
         temp_yawn = 0
+
+        if score < SCORE_THRESH:
+            notify(heading=f'Driver {DRIVER_ID}',
+                   message=f'Attentiveness dropped to {score}%')
+
+        text_log(f'Eyes closed for more than threshold {BLINK_THRESH} -> Attentiveness {score}%')
+        winsound.PlaySound('data/beep.wav', winsound.SND_FILENAME)
 
     # YAWNING ---------------------------------------
     if (time() - init <= delta) and temp_blink >= 15:
@@ -286,12 +310,21 @@ while True:
 
         temp_blink = 0
 
+        if score < SCORE_THRESH:
+            notify(heading=f'Driver {DRIVER_ID}',
+                   message=f'Attentiveness dropped to {score}%')
+
+        text_log(f'Driver yawning -> Attentiveness {score}%')
+        winsound.PlaySound('data/beep.wav', winsound.SND_FILENAME)
+
+    # RESET TIME
     if time() - init >= delta:
         init = time()
         adder += 1
 
-    if adder % ((60/delta) * 10) == 0 and score <= 95:
-        score += 5
+    # GAIN SCORE
+    if adder % ((60/delta) * 10) == 0 and score < 100:
+        score += 1
 
     if DEBUG_FACE:
         cv2.rectangle(img=frame,
@@ -299,15 +332,16 @@ while True:
                       pt2=(box[2], box[3]),
                       color=WHITE)
 
+    # ADD TEXT INFO
     add_text(winname=frame,
              message=f'Blinks {blink_ctr}',
-             colour=WHITE,
+             colour=BLACK,
              size=0.5,
              location=(35, 35))
 
     add_text(winname=frame,
              message=f'Yawns {yawn_ctr} Score {score}',
-             colour=WHITE,
+             colour=BLACK,
              size=0.5,
              location=(35, 70))
 
@@ -319,9 +353,16 @@ while True:
 
     if DEBUG_LIPS and DEBUG_EYES:
         add_text(winname=frame,
-                 message=f'Time {time()}, Adder {adder}, Temp Blink/Yawn {temp_blink, temp_yawn}',
+                 message=f'Adder {adder}, Temp Blink/Yawn {temp_blink, temp_yawn}',
                  size=0.5,
                  location=(35, 140))
+
+    if DEBUG_FACE:
+        cv2.rectangle(img=frame,
+                      pt1=(box[0], box[1]),
+                      pt2=(box[2], box[3]),
+                      color=GREEN,
+                      thickness=2)
 
     cv2.imshow('Frame', frame)
     cv2.waitKey(1)
@@ -329,4 +370,4 @@ while True:
     if (cv2.waitKey(1) & 0xFF) == ord('q'):
         break
 
-cv2.destroyAllWindows()
+exit_sequence()

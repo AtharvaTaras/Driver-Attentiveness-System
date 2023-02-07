@@ -1,4 +1,5 @@
 import cv2
+import winsound
 
 HAAR_DATA = cv2.CascadeClassifier('data/frontfacedata.xml')
 VID = cv2.VideoCapture(0)
