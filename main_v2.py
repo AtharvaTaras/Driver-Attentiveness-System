@@ -18,7 +18,9 @@ VID = cv2.VideoCapture(0)
 # VID.set(cv2.CAP_PROP_EXPOSURE, 0.5)
 
 YAWN_THRESH = 35
-BLINK_THRESH = 0.16
+BLINK_THRESH = 0.15
+SCORE_THRESH = 70
+PAD = 50
 
 DETECTOR = dlib.get_frontal_face_detector()
 PREDICTOR = dlib.shape_predictor("data/shape_predictor_68_face_landmarks.dat")
@@ -26,10 +28,10 @@ HAAR_DATA = cv2.CascadeClassifier('data/frontfacedata.xml')
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 
 # Debugging
-DEBUG_FACE = True
+DEBUG_FACE = False
 DEBUG_EAR = True
-DEBUG_EYES = False
-DEBUG_LIPS = False
+DEBUG_EYES = True
+DEBUG_LIPS = True
 
 
 def exit_sequence() -> None:
@@ -56,6 +58,8 @@ def find_face() -> list:
 
         if len(face_coordinates) == 1:
             x, y, w, h = [each for each in face_coordinates[0]]
+            h = h+PAD
+
             subframe = grayscale[y: y + h, x: x + w]
 
         else:
@@ -138,23 +142,17 @@ def blink_yawn(sub_frame) -> list:
     lip = None
     lt_hull, rt_hull = None, None
 
-    points = HAAR_DATA.detectMultiScale(image=frame,
-                                        scaleFactor=2,
-                                        minNeighbors=5,
-                                        minSize=(50, 50)
-                                        )
+    faces = DETECTOR(sub_frame)
 
-    for (x, y, w, h) in points:
-
-        rectangle = dlib.rectangle(int(x), int(y), int(x + w), int(y + h))
-        shape = PREDICTOR(sub_frame, rectangle)
+    for face in faces:
+        shape = PREDICTOR(sub_frame, face)
         shape = face_utils.shape_to_np(shape)
 
         # EYES -----------------------------------------------------------
 
         eye = final_ear(shape)
         ear = eye[0]
-        print(ear)
+        # print(ear)
         lt_eye = eye[1]
         rt_eye = eye[2]
 
@@ -162,28 +160,36 @@ def blink_yawn(sub_frame) -> list:
             lt_hull = cv2.convexHull(lt_eye)
             rt_hull = cv2.convexHull(rt_eye)
 
-        # cv2.drawContours(frame, [leftEyeHull], -1, (0, 255, 0), 1)
-        # cv2.drawContours(frame, [rightEyeHull], -1, (0, 255, 0), 1)
+            cv2.drawContours(image=sub_frame, contours=[lt_hull], contourIdx=-1, color=GREEN, thickness=2)
+            cv2.drawContours(image=sub_frame, contours=[rt_hull], contourIdx=-1, color=GREEN, thickness=2)
 
-        # cv2.putText(frame, f'EAR: {ear}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+            add_text(winname=sub_frame,
+                     message=f'EAR {round(ear, 2)}',
+                     colour=WHITE,
+                     thick=2,
+                     size=0.75)
 
         if ear < BLINK_THRESH:
             blinked = True
 
-        # MOUTH ---------------------------------------------------------
+        # LIPS ---------------------------------------------------------
 
         distance = lip_distance(shape)
 
         lip = shape[48:60]
-        '''
-        cv2.drawContours(image=frame,
-                         contours=[lip],
-                         contourIdx=-1,
-                         color=(200, 200, 200),
-                         thickness=-1)
-        '''
+
+        if DEBUG_LIPS:
+
+            cv2.drawContours(image=sub_frame,
+                             contours=[lip],
+                             contourIdx=-1,
+                             color=WHITE,
+                             thickness=5)
+
         if distance > YAWN_THRESH:
             yawned = True
+
+        cv2.imshow('Eyes and Lips Debug', sub_frame)
 
     return [blinked, yawned, lt_hull, rt_hull, lip]
 
@@ -211,17 +217,21 @@ while True:
         temp_blink += 1
 
     if yawn:
-        yawn_ctr += 1
         temp_yawn += 1
 
     # EYES CLOSED ----------------------------------
     if (time() - init <= delta) and temp_yawn >= 20:
-        score -= 5
+        if score >= 5:
+            score -= 5
+        yawn_ctr += 1
+
         temp_yawn = 0
 
     # YAWNING ---------------------------------------
     if (time() - init <= delta) and temp_blink >= 15:
-        score -= 10
+        if score >= 10:
+            score -= 10
+
         temp_blink = 0
 
     if time() - init >= delta:
@@ -244,7 +254,7 @@ while True:
              thick=2)
 
     add_text(winname=frame,
-             message=f'Time {time}, Adder {adder}, Temp Blink/Yawn {temp_blink, temp_yawn}',
+             message=f'Time {time()}, Adder {adder}, Temp Blink/Yawn {temp_blink, temp_yawn}',
              location=(35, 70),
              size=0.5,
              thick=2)
