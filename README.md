@@ -5,8 +5,8 @@
 AISSMS Institute of Information Technology, Pune
 
 A Python program that checks driver attentiveness using computer vision.  
-[View Video Presentation](https://www.youtube.com/watch?v=sbY9eiCWGRE)  
-[View PPT](https://drive.google.com/file/d/1AAGb1894vnT5_WYfS88htxj2IZddtmCA/view?usp=sharing)  
+[Watch Video Demonstartion](https://www.youtube.com/watch?v=sbY9eiCWGRE)  
+[View Presentation](https://drive.google.com/file/d/1AAGb1894vnT5_WYfS88htxj2IZddtmCA/view?usp=sharing)  
 [View Source Code](https://github.com/AtharvaTaras/Driver-Attentiveness-System/blob/master/main_v2.py)  
 
 <pre>
